@@ -57,7 +57,7 @@ def run_prediction(file_path):
                 print("日期格式错误，请使用 YYYY-MM-DD 格式")
                 
          # 初始化处理器
-        proc = processor(file_path)
+        # proc = processor(file_path)
         
         # 创建预测器并运行预测
         predictor = predictor_impl(os.path.join(file_path, "result\\all_in_one_processed.csv"), period)
@@ -67,7 +67,7 @@ def run_prediction(file_path):
         predictor.predicton_data_saver()
         
         # 处理预测数据
-        proc.predicted_csv()
+        # proc.predicted_csv()
         
     except Exception as e:
         print(f"预测过程出错: {str(e)}")
