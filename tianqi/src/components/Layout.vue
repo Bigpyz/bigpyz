@@ -6,7 +6,7 @@ import { getPre } from '../option/precipitation.js';
 import { getWind } from '../option/wind.js';
 import {getHum} from '../option/wei.js';
 import http from '../api/http';
-
+import {getOption} from '../option/getOption.js';
 import Echarts from './Echarts.vue'
 import Form from './Form.vue'
 import { ElLoading } from 'element-plus'
@@ -14,10 +14,15 @@ const tem =ref(null)
 const option = ref(null)
 const TemWidth = ref('70.25rem');
 const TemHeight = ref('32.0000rem');
-const PreWidth = ref('25.25rem');
-const PreHeight = ref('19.3000rem');
+const PreWidth = ref('23.25rem');
+const PreHeight = ref('14.3000rem');
 const date = ref(2024);
 const fullscreenLoading = ref(false)
+const all = ref(null)
+const Ptem = ref(null)
+const Ppre = ref(null)
+const Pwater = ref(null)
+
 
 function onSomeValueChanged(newValue, oldValue) {
       console.log(`someValue changed from ${oldValue} to ${newValue}`);
@@ -104,6 +109,34 @@ function formatDate(date) {
 
 wendu()
 
+const all1 = async()=>{
+  all.value = null;
+  await getOption().then(res=>{
+    console.log(res[0]);
+      all.value = res[0];
+     
+    })
+    console.log(all.value);
+}
+const all2 = async()=>{
+  all.value = null;
+  await getOption().then(res=>{
+    console.log(res);
+      all.value = res[1];
+     
+    })
+    console.log(all.value);
+}
+const all3 = async()=>{
+  all.value = null;
+  await getOption().then(res=>{
+    console.log(res);
+      all.value = res[2];
+     
+    })
+    console.log(all.value);
+}
+
 // 在组件挂载之前获取数据
 onMounted(async () => {
   const date = new Date().getFullYear();
@@ -121,7 +154,16 @@ onMounted(async () => {
 
   }
 })
+
+await getOption().then(res=>{
+  console.log(res);
+      Ptem.value = res[0];
+      Ppre.value = res[1];
+      Pwater.value = res[2];
+    })
+    all1()
 });
+
 </script>
 
 <template>
@@ -149,7 +191,16 @@ onMounted(async () => {
         </div>
         <!--折线图-->
         <div class="border-container">    
-            <Echarts v-if="option" :dataSource="option" :canvasWidth="PreWidth" :canvasHeight="PreHeight"></Echarts> 
+          <div  style="width:25.25rem;padding: 1.0417rem;">
+              <div id="select">
+              <div> <el-button @click="all1()" type="warning" round>温度</el-button>
+               <el-button @click="all2()" type="warning" round>湿度</el-button>
+               <el-button @click="all3()" type="warning" round>降水量</el-button>
+              
+              </div>
+              </div>
+              <Echarts v-if="all" :dataSource="all" :canvasWidth="PreWidth" :canvasHeight="PreHeight"></Echarts>
+            </div>
             <span class="top-left border-span"></span>
             <span class="top-right border-span"></span>
             <span class="bottom-left border-span"></span>
