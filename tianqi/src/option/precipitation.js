@@ -1,21 +1,25 @@
 import * as echarts from 'echarts';
-import axios from 'axios';
+import http from '../api/http';
 
-export const getPre = async()=>{
+
+export const getPre = async(date)=>{
+  if(!date){
+    date = new Date().getFullYear();
+   }
   let time = [],
       hums_f = [],
       hums_his_f = [];
 
-  await axios.get('http://110.41.64.229:8002/hum').then(res=>{
+  await http.get(`/hum/${date}`).then(res=>{
    console.log(res.data);
   if(res.data.code === 200){
     const {dates,hums_his,hums } = res.data.data;
     time = dates;
     hums_f = hums;
     hums_his_f = hums_his;
+   
   }
 })
-// precipitation =
 return  {
   title: {
     text: '湿度'

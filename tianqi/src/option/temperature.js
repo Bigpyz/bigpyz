@@ -1,6 +1,13 @@
 import * as echarts from 'echarts';
-import axios from 'axios';
-export const getTem= async()=>{
+import http from '../api/http';
+
+
+
+export const getTem= async(date)=>{
+  
+     if(!date){
+      date = new Date().getFullYear();
+     }
      let time = [],
      hei= [],
      low= [],
@@ -8,7 +15,7 @@ export const getTem= async()=>{
      low_his= [],
      pre_hei= [],
      pre_low= [];
-    await axios.get('http://110.41.64.229:8002/tem').then(res=>{
+    await http.get(`/tem/${date}`).then(res=>{
    
       if(res.data.code === 200){
         const {dates,hei_his_temps,hei_temps,low_his_temps,low_temps,pre_hei_temps,pre_low_temps } = res.data.data;
@@ -19,6 +26,7 @@ export const getTem= async()=>{
         pre_low = pre_low_temps;
         hei_his = hei_his_temps;
         low_his = low_his_temps;
+      
       }
 
     })
@@ -110,7 +118,13 @@ export const getTem= async()=>{
             focus: 'series'
           },
            data: hei,
+           tooltip: {
+            valueFormatter: function (value) {
+              return value + ' °C';
+            }
+          },
         },
+        
         {
           name: '每日最低气温',
           type: 'line',
@@ -153,27 +167,41 @@ export const getTem= async()=>{
             focus: 'series'
           },
           data: low,
+          tooltip: {
+            valueFormatter: function (value) {
+              return value + ' °C';
+            }
+          },
         },
          {
         name: '历史每日最高气温',
         type: 'line',
         data: hei_his,
          lineStyle: {
-                          type: 'dashed', // 设置为虚线
-                          color: 'red', // 线条颜色
-                          width: 2 // 线条宽度
-                      },
-       
+               type: 'dashed', // 设置为虚线
+                color: '#ffffff', // 线条颜色
+                width: 2 // 线条宽度
+         },
+         tooltip: {
+          valueFormatter: function (value) {
+            return value + ' °C';
+          }
+        },
       },
       {
         name: '历史每日最低气温',
         type: 'line',
         data:low_his,
        lineStyle: {
-                          type: 'dashed', // 设置为虚线
-                          color: '#00000', // 线条颜色
-                          width: 2 // 线条宽度
-                      },
+            type: 'dashed', // 设置为虚线
+            color: '#ffffff', // 线条颜色
+            width: 2 // 线条宽度
+          },
+         tooltip: {
+            valueFormatter: function (value) {
+             return value + ' °C';
+            }
+          },
       }
         
       ]

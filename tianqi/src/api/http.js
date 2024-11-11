@@ -1,23 +1,116 @@
-import axios from 'axios';
+import axios from "axios";
 
-axios.get('http://110.41.64.229:8002/tem').then(res=>{
-        console.log(res.data)
-        console.log(res)
-        console.log(typeof res.data)
-        // const ans = JSON.parse(res.data)
-        // console.log(typeof ans)
-        // console.log(ans.data)
-        console.log(res.data.code)
-        console.log(res.data.dates)
-        if(res.data.code === 200){
-          const {dates,hei_his_temps,hei_temps,low_his_temps,low_temps,pre_hei_temps,pre_low_temps } = res.data.data;
-          console.log(dates)
-          console.log(hei_his_temps)
-          console.log(hei_temps)
-          console.log(low_his_temps)
-          console.log(low_temps)
-          console.log(pre_hei_temps)
-          console.log(pre_low_temps)
+axios.defaults.baseURL = 'http://110.41.64.229:8002';
+axios.defaults.timeout = 20 * 1000;
+axios.defaults.maxBodyLength = 5 * 1024 * 1024;
+// axios.defaults.withCredentials = true
+
+axios.interceptors.request.use(
+    (config) => {
+
+        config.params = {
+            ...config.params,
+            t: Date.now(),
         }
+        return config;
+    },
+    function (error) {
+        return Promise.reject(error);
+    }
+);
 
-    })
+// 添加响应拦截器
+axios.interceptors.response.use(
+    (response) => {
+        return response;
+    },
+    function (error) {
+        return Promise.reject(error);
+    }
+);
+
+
+
+
+
+const http = {
+    get(url) {
+        return new Promise((resolve, reject) => {
+            axios
+                .get(url)
+                .then((res) => {
+                    resolve(res);
+                })
+                .catch((err) => {
+                    reject(err.data);
+                });
+        });
+    },
+
+    post(url, params) {
+        return new Promise((resolve, reject) => {
+            axios
+                .post(url, JSON.stringify(params))
+                .then((res) => {
+                    resolve(res.data);
+                })
+                .catch((err) => {
+                    reject(err.data);
+                });
+        });
+    },
+
+    put(url, params) {
+        return new Promise((resolve, reject) => {
+            axios
+                .put(url, JSON.stringify(params))
+                .then((res) => {
+                    resolve(res.data);
+                })
+                .catch((err) => {
+                    reject(err.data);
+                });
+        });
+    },
+
+    delete(url, params) {
+        return new Promise((resolve, reject) => {
+            axios
+                .delete(url, {params})
+                .then((res) => {
+                    resolve(res.data);
+                })
+                .catch((err) => {
+                    reject(err.data);
+                });
+        });
+    },
+
+    upload(url, file) {
+        return new Promise((resolve, reject) => {
+            axios
+                .post(url, file, {
+                    headers: {"Content-Type": "multipart/form-data"},
+                })
+                .then((res) => {
+                    resolve(res.data);
+                })
+                .catch((err) => {
+                    reject(err.data);
+                });
+        });
+    },
+
+    download(url) {
+        const iframe = document.createElement("iframe");
+        iframe.style.display = "none";
+        iframe.src = url;
+        iframe.onload = function () {
+            document.body.removeChild(iframe);
+        };
+
+        document.body.appendChild(iframe);
+    },
+};
+
+export default http;

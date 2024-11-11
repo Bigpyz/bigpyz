@@ -1,47 +1,138 @@
 <script setup>
-import {ref,onBeforeMount} from 'vue'
+import {ref,onMounted,watch} from 'vue'
 import {getTem} from '../option/temperature.js';
 import { getWater } from '../option/water.js';
 import { getPre } from '../option/precipitation.js';
+import { getWind } from '../option/wind.js';
+import {getHum} from '../option/wei.js';
+import http from '../api/http';
+
 import Echarts from './Echarts.vue'
-
+import Form from './Form.vue'
+import { ElLoading } from 'element-plus'
 const tem =ref(null)
-const precipitation = ref(null)
-const water = ref(null)
-onBeforeMount(()=>{
-   getTem().then(data=>{
-    tem.value = data; 
-   })
-   getPre().then(data=>{
-    precipitation.value = data;
-  })
-  getWater().then(data=>{
-    water.value = data;
-  })
-
-})
-
+const option = ref(null)
 const TemWidth = ref('70.25rem');
 const TemHeight = ref('32.0000rem');
-console.log(tem.value);
-const waterWidth = ref('25.25rem');
-const waterHeight = ref('17.0000rem');
-
 const PreWidth = ref('25.25rem');
-const PreHeight = ref('17.0000rem');
+const PreHeight = ref('19.3000rem');
+const date = ref(2024);
+const fullscreenLoading = ref(false)
 
-const ldb = async()=>{
+function onSomeValueChanged(newValue, oldValue) {
+      console.log(`someValue changed from ${oldValue} to ${newValue}`);
+      // 在这里执行其他操作
+      wendu()
+    }
+ 
+    // 使用 watch 来观察 someValue 的变化
+    watch(date, onSomeValueChanged);
+const options = [
+  {
+    value: 2020,
+    label: '2020',
+  },
+  {
+    value: 2021,
+    label: '2021',
+  },
+  {
+    value: 2022,
+    label: '2022',
+  },
+  {
+    value: 2023,
+    label: '2023',
+  },
+  {
+    value: 2024,
+    label: '2024',
+  },
+]
+// 函数来更新 tem 的值
+const pach = async()=>{
+  fullscreenLoading.value = true
+  const loading = ElLoading.service({
+    lock: true,
+    text: 'Loading',
+    background: 'rgba(0, 0, 0, 0.7)',
+  })
+  await http.post(`/scrapy`)
+  loading.close()
+  fullscreenLoading.value = false
+  window.location.reload();
+  
+}
+const wendu = async() => {
   tem.value = null;
-  await getPre().then(data=>{
-    tem.value = data;
+   await getTem(date.value).then(data=>{
+    tem.value = data
   })
   console.log(tem.value);
+};
+ 
+const shidu = async() => {
+  tem.value = null;
+  await getPre(date.value).then(data=>{
+    tem.value = data
+  })
+  console.log(tem.value);
+};
+ 
+const jiangshui = async() => {
+  tem.value = null;
+  await getWater(date.value).then(data=>{
+    tem.value = data
+  })
+  console.log(tem.value);
+};
+ 
+const feng = async() => {
+  tem.value = null;
+  await getWind(date.value).then(data=>{
+    tem.value = data
+  })
+  console.log(tem.value);
+};
+function formatDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // 月份从0开始，所以需要+1，并补0
+    const day = String(date.getDate()).padStart(2, '0'); // 补0
+ 
+    return `${year}年${month}月${day}日`;
 }
+
+wendu()
+
+// 在组件挂载之前获取数据
+onMounted(async () => {
+  const date = new Date().getFullYear();
+  const d = formatDate(new Date()); 
+  await http.get(`/wind/${date}`).then(res=>{
+   console.log(res.data);
+  if(res.data.code === 200){
+    const {dates,winds} = res.data.data;
+    console.log(dates);
+    console.log(d);
+    const index = dates.indexOf(d);
+    console.log(index);
+    console.log(winds[index]);
+    option.value = getHum(winds[index]);
+
+  }
+})
+});
 </script>
 
 <template>
  <div class="con">
-  <div class="header">桂林市xx年天气数据统计   
+  <div class="header">桂林市天气数据统计   
+
+    <el-button 
+      v-loading.fullscreen.lock="fullscreenLoading"
+      id="pc" 
+      type="primary" 
+      @click="pach()"> 开始爬取 </el-button>
   </div>
    
  
@@ -49,7 +140,8 @@ const ldb = async()=>{
   <div class="main-left" style="margin-left: 1%;">
         <!--条形图-->
         <div class="border-container" >        
-        <Echarts v-if="water" :dataSource="water" :canvasWidth="waterWidth" :canvasHeight="waterHeight"></Echarts>
+         <Form/>
+
         <span class="top-left border-span"></span>
             <span class="top-right border-span"></span>
             <span class="bottom-left border-span"></span>
@@ -57,7 +149,7 @@ const ldb = async()=>{
         </div>
         <!--折线图-->
         <div class="border-container">    
-            <Echarts v-if="precipitation" :dataSource="precipitation" :canvasWidth="PreWidth" :canvasHeight="PreHeight"></Echarts> 
+            <Echarts v-if="option" :dataSource="option" :canvasWidth="PreWidth" :canvasHeight="PreHeight"></Echarts> 
             <span class="top-left border-span"></span>
             <span class="top-right border-span"></span>
             <span class="bottom-left border-span"></span>
@@ -69,27 +161,32 @@ const ldb = async()=>{
 
     <div class="main-middle">
        
-        <!-- <div class="no">
-            <div class="no-hd">
-                <ul>
-                    <li>1211</li>
-                    <li>1045</li>
-                </ul>
-            </div>
-            <div class="no-bd">
-                <ul>
-                    <li>毕业总人数</li>
-                    <li>就业总人数</li>
-                </ul>
-            </div>
-        </div> -->
 
-   
         <div class="border-container">
  
             <div id="main" style="width:60.4583rem;padding: 1.0417rem;">
-              <div style="height: 2.1000rem;">
-               <button @click="ldb()"> ldb</button>
+              <div id="select">
+              <div> <el-button @click="wendu()" type="warning" round>温度</el-button>
+               <el-button @click="shidu()" type="warning" round>湿度</el-button>
+               <el-button @click="jiangshui()" type="warning" round>降水量</el-button>
+               <el-button @click="feng()" type="warning" round>风速</el-button>
+              </div>
+               <div style="color: azure;">
+                年份：
+                <el-select
+                    v-model="date"
+                    placeholder="Select"
+                    size="large"
+                    style="width: 240px"
+                  >
+                    <el-option
+                      v-for="item in options"
+                      :key="item.value"
+                      :label="item.label"
+                      :value="item.value"
+                    />
+                  </el-select>
+               </div>
               </div>
               <Echarts v-if="tem" :dataSource="tem" :canvasWidth="TemWidth" :canvasHeight="TemHeight"></Echarts>
             </div>
@@ -100,27 +197,6 @@ const ldb = async()=>{
             <span class="bottom-right border-span"></span>
         </div>
     </div>
-
-    <!-- <div class="main-right">
-
-        <div class="border-container">        
-            <div id="zhu" class="boxsize"></div> 
-            <span class="top-left border-span"></span>
-                <span class="top-right border-span"></span>
-                <span class="bottom-left border-span"></span>
-                <span class="bottom-right border-span"></span>
-            </div>
-         
-            <div class="border-container">    
-                <div id="liu" class="boxsize"></div> 
-                <span class="top-left border-span"></span>
-                <span class="top-right border-span"></span>
-                <span class="bottom-left border-span"></span>
-                <span class="bottom-right border-span"></span>
-            </div>
-        
-        
-    </div> -->
  </div>
  </div>
   
@@ -149,6 +225,12 @@ li {
  color: #ffffff;
  text-align: center;
  background: url(../assets/bg.png) top center no-repeat;
+}
+#pc{
+  position: absolute;
+  right: 50px;
+  bottom: 0px;
+  padding: 10px;
 }
 #box{
   flex: 1;
@@ -204,7 +286,7 @@ box-shadow: inset 0 0 50px rgba(255,255,255,.1),0 0 5px rgba(0,0,0,.3)
 }
 .boxsize{
   width: 15.625rem;
-  height:16.8167rem;
+  height:18.8167rem;
 }
 .border-container span.border-span {
  display: block;
@@ -245,89 +327,13 @@ box-shadow: inset 0 0 50px rgba(255,255,255,.1),0 0 5px rgba(0,0,0,.3)
  color: #00ffff;
 }
 
-/* @font-face{font-family:electronicFont;src:url(DS-DIGI-1.TTF)}
-.number {
- font-size: 72px; 
- color: #0e94ea;  
- font-family:electronicFont; 
- font-weight: bold;
-} */
-
-.no {
-  background: rgba(101, 132, 226, 0.1);
-  padding: 0.1875rem;
-  height: 100px;
-  margin-top: 10px;
+#select{
+  width: 119%;
+    height: 3.1rem;
+    padding: 0px 35px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
 }
-
-.no .no-hd {
-  position: relative;
-  border: 1px solid rgba(25, 186, 139, 0.17);
-}
-
-.no .no-hd::before {
-  content: "";
-  position: absolute;
-  width: 30px;
-  height: 10px;
-  border-top: 2px solid #02a6b5;
-  border-left: 2px solid #02a6b5;
-  top: 0;
-  left: 0;
-}
-
-.no .no-hd::after {
-  content: "";
-  position: absolute;
-  width: 30px;
-  height: 10px;
-  border-bottom: 2px solid #02a6b5;
-  border-right: 2px solid #02a6b5;
-  right: 0;
-  bottom: 0;
-}
-
-.no .no-hd ul {
-  display: flex;
-}
-
-.no .no-hd ul li {
-  position: relative;
-  flex: 1;
-  text-align: center;
-  height: 50px;
-  line-height: 62px;
-  font-size: 24px;
-  color: #ffeb7b;
-  padding: 0.05rem 0;
-  font-family: electronicFont;
-  font-weight: bold;
-}
-
-.no .no-hd ul li:first-child::after {
-  content: "";
-  position: absolute;
-  height: 50%;
-  width: 1px;
-  background: rgba(255, 255, 255, 0.2);
-  right: 0;
-  top: 25%;
-}
-
-.no .no-bd ul {
-  display: flex;
-}
-
-.no .no-bd ul li {
-  border: none;
-  flex: 1;
-  height: 50px;
-  line-height: 50px;
-  text-align: center;
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.7);
-  padding-top: 0.125rem;
-}
-
 
 </style>

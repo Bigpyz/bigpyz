@@ -1,14 +1,20 @@
-import axios from "axios";
+import http from '../api/http';
 
-export const getWater = async()=>{
+
+export const getWater = async(date)=>{
+ 
+  if(!date){
+    date = new Date().getFullYear();
+   }
 let time = [],
     water = [];
-  await axios.get('http://110.41.64.229:8002/preci').then(res=>{
+  await http.get(`/preci/${date}`).then(res=>{
    console.log(res.data);
   if(res.data.code === 200){
     const {dates,preci} = res.data.data;
     time = dates;
     water = preci;
+   
   }
 })
 
@@ -16,12 +22,7 @@ let time = [],
 return {
   tooltip: {
     trigger: 'axis',
-    axisPointer: {
-      type: 'cross',
-      crossStyle: {
-        color: '#999'
-      }
-    }
+    
   },
  
   legend: {
